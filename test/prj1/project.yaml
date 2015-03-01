@@ -1,0 +1,3 @@
+_executable: [ '*.sh', '*.py' ]
+name: awesome_project
+decription: awesome_decription
