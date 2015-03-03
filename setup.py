@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-from setuptools import setup
+from setuptools import setup, find_packages
 import json
 import os
 
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    #return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(fname).read()
 
 
 def load_version():
@@ -16,7 +17,7 @@ setup(
     name='agile_conf',
     version=load_version(),
     description='An async http client with keep-alive capabilities',
-    long_description=read('README.rst'),
+    long_description=read('README.md'),
     license='BSD',
     author='Tom Tang',
     author_email='tly1980@gmail.com',
@@ -28,6 +29,9 @@ setup(
     ],
     include_package_data=True,
     scripts=['src/ac.py'],
+    package_data={
+        '': ['*.md']
+    },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',

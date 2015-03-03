@@ -45,7 +45,7 @@ class Prj1Test(unittest.TestCase):
 
         self.ret, self.stdout = run_project(
             self.prj_name,
-            'ac.py', 'build', '--conf', 'prod.yaml')
+            'agile_conf.py', 'build', '--conf', 'prod.yaml')
 
     def test_build(self):
         self.assertEqual(self.ret, 0)
