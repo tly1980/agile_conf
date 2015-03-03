@@ -13,8 +13,6 @@ import yaml
 import jinja2
 
 
-
-
 def aws_userdata(arg_lst):
     lines = []
     path = os.path.join(*arg_lst)
@@ -90,7 +88,7 @@ class Project(object):
 
     def build_id(self, seperator='/'):
         return seperator.join([
-            str(self.the_config['conf']['env']),
+            str(self.the_config['conf']['name']),
             str(self.the_config['conf']['number'])
         ])
 
@@ -98,7 +96,7 @@ class Project(object):
         return os.path.join(
             self.proj_folder,
             '_builds',
-            str(self.the_config['conf']['env']),
+            str(self.the_config['conf']['name']),
             str(self.the_config['conf']['number'])
         )
 
@@ -107,7 +105,7 @@ class Project(object):
             self.proj_folder,
             '_builds',
             '.tmp',
-            str(self.the_config['conf']['env']),
+            str(self.the_config['conf']['name']),
             str(self.the_config['conf']['number'])
         )
 
