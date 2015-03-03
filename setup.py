@@ -17,7 +17,7 @@ setup(
     name='agile_conf',
     version=load_version(),
     description='An async http client with keep-alive capabilities',
-    long_description=read('README.md'),
+    long_description=read('README.txt'),
     license='BSD',
     author='Tom Tang',
     author_email='tly1980@gmail.com',
@@ -27,11 +27,9 @@ setup(
         'PyYAML>=3.0',
         'Jinja2'
     ],
-    include_package_data=True,
-    scripts=['src/ac.py'],
-    package_data={
-        '': ['*.md']
-    },
+    scripts=['scripts/agconf'],
+    package_dir={'': 'src'},
+    packages=['agile_conf'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',
