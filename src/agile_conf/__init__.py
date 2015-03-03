@@ -8,6 +8,7 @@ import json
 import datetime
 import sys
 import shutil
+import fnmatch
 
 import yaml
 import jinja2
@@ -131,6 +132,14 @@ class Project(object):
 
         files_cp = [
             fname for fname in files if fname not in files_tpl]
+
+        _ignores = self.the_config[m].get('_ignores', [])
+
+        for p in _ignores:
+            files_cp = [
+                f for f in files_cp if not fnmatch.fnmatch(f, p)]
+
+        print "building module: %s" % m
 
         for fname in files_cp:
             if fname not in ('module.yaml', ):

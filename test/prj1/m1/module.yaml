@@ -1,1 +1,2 @@
-name: {{project.name}}-{{conf.env}}-{{conf.number}}
+name: {{project.name}}-{{conf.name}}-{{conf.number}}
+_ignores: ['*.not_copy', should_not_be_copy]

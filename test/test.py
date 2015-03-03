@@ -7,6 +7,8 @@ import tempfile
 import shutil
 
 
+import yaml
+
 SRC_PATH = os.path.abspath(
     os.path.join(
         os.path.dirname(__file__),
@@ -49,10 +51,10 @@ class Prj1Test(unittest.TestCase):
         with open(os.path.join(self.prj_path, 'prod.yaml'), 'wb') as f:
             f.write(DEFAULT_PROD_YAML)
 
-        build_path = os.path.join(self.prj_path, '_builds')
-        shutil.rmtree(build_path, True)
+        self.build_path = os.path.join(self.prj_path, '_builds')
+        shutil.rmtree(self.build_path, True)
 
-    def test_new(self):
+    def test_0new(self):
         ret, conf_id = run_project(
             self.prj_name,
             'agconf.py', 'id', '--conf', 'prod.yaml')
@@ -75,20 +77,29 @@ class Prj1Test(unittest.TestCase):
         ret, stdout = run_project(
             self.prj_name,
             'agconf.py', 'build', '--conf', 'prod.yaml')
-
         self.assertEqual(ret, 0)
-
         self.assertEqual(
-            stdout, "build started prod/1 ...\nbuild finished\n")
+            stdout, "build started prod/1 ...\nbuilding module: m1\nbuild finished\n")
+
+        m1_path = os.path.join(self.prj_path, '_builds', 'prod', '1', 'm1', 'module.yaml')
+
+        with open(m1_path) as f:
+            m1 = yaml.load(f)
+            self.assertEqual(m1, {
+                '_ignores': ['*.not_copy', 'should_not_be_copy'],
+                'name': 'awesome_project-prod-1'
+            })
 
     def test_folder_structure(self):
+        '''
+        testing the folder structure, also for module _ignores
+        '''
         ret, stdout = run_project(
             self.prj_name,
             'agconf.py', 'build', '--conf', 'prod.yaml')
 
         flist = list(os.walk(
             os.path.join(self.prj_path, '_builds', 'prod')))
-
         flist_should = [
             (
                 os.path.join(self.prj_path, '_builds', 'prod'),

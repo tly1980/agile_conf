@@ -2,7 +2,9 @@
 import argparse
 import os
 import datetime
-
+import os
+import subprocess
+import sys
 
 import yaml
 
@@ -16,6 +18,34 @@ AP.add_argument(
     If you don't specify it will try to lookup enviornment variable "AC_CONF".
     If it is not exists, it will fallback to conf.yaml in the working directory.
 ''')
+
+
+DEFAULT_CONF='''
+boilerplate_repo: {bo_repo}
+'''
+
+
+def prepare_ag_conf(
+        repo_path='https://github.com/tly1980/agile_conf_boilplate.git'):
+    def prepare_repo(repo_location):
+        return subprocess.call(
+            ['git', 'clone', repo_path, repo_location])
+
+    home_folder = os.path.expanduser('~/.agile_conf')
+    if not os.path.isdir(home_folder):
+        print "home folder wasn't created, about to create one."
+        os.mkdir(home_folder)
+
+        cfg_path = os.path.join(home_folder, 'conf.yaml')
+        bo_repo = os.path.join(home_folder, 'bo_repo')
+        with open(cfg_path, 'wb') as f:
+            f.write(
+                DEFAULT_CONF.format(bo_repo=bo_repo)
+            )
+
+        ret = prepare_repo(bo_repo)
+        if ret != 1:
+            sys.exit("Failed to clone repository: %s" % repo_path)
 
 
 def main(args):
