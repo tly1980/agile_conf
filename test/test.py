@@ -5,6 +5,7 @@ import unittest
 import cStringIO as StringIO
 import tempfile
 import shutil
+import json
 
 
 import yaml
@@ -41,6 +42,7 @@ number: 1
 updated: '2015-01-01 00:00:00'
 '''
 
+CMD="main.py"
 
 class Prj1Test(unittest.TestCase):
     def setUp(self):
@@ -57,12 +59,12 @@ class Prj1Test(unittest.TestCase):
     def test_0new(self):
         ret, conf_id = run_project(
             self.prj_name,
-            'agconf.py', 'id', '--conf', 'prod.yaml')
+            CMD, 'id', '--conf', 'prod.yaml')
         self.assertEqual(conf_id.strip(), 'prod/1')
 
         ret, stdout = run_project(
             self.prj_name,
-            'agconf.py', 'new', '--conf', 'prod.yaml')
+            CMD, 'new', '--conf', 'prod.yaml')
         self.assertEqual(ret, 0)
         self.assertEqual(
             stdout,
@@ -70,16 +72,22 @@ class Prj1Test(unittest.TestCase):
 
         ret, conf_id = run_project(
             self.prj_name,
-            'agconf.py', 'id', '--conf', 'prod.yaml')
+            CMD, 'id', '--conf', 'prod.yaml')
         self.assertEqual(conf_id.strip(), 'prod/2')
 
     def test_build(self):
         ret, stdout = run_project(
             self.prj_name,
-            'agconf.py', 'build', '--conf', 'prod.yaml')
+            CMD, 'build', '--conf', 'prod.yaml')
         self.assertEqual(ret, 0)
         self.assertEqual(
-            stdout, "build started prod/1 ...\nbuilding module: m1\nbuild finished\n")
+            stdout, """\
+build started prod/1 ... [{prj_path}/_builds/prod/1]
+building: m1 (module)
+b_can_copy copied from ({prj_path}/m1/b_can_copy)
+run.sh rendered [run.sh.tpl]
+
+build finished\n""".format(prj_path=self.prj_path))
 
         m1_path = os.path.join(self.prj_path, '_builds', 'prod', '1', 'm1', 'module.yaml')
 
@@ -96,7 +104,7 @@ class Prj1Test(unittest.TestCase):
         '''
         ret, stdout = run_project(
             self.prj_name,
-            'agconf.py', 'build', '--conf', 'prod.yaml')
+            CMD, 'build', '--conf', 'prod.yaml')
 
         flist = list(os.walk(
             os.path.join(self.prj_path, '_builds', 'prod')))
@@ -116,13 +124,57 @@ class Prj1Test(unittest.TestCase):
             (
                 os.path.join(self.prj_path, '_builds', 'prod', '1', 'm1'),
                 [],
-                ['module.yaml', 'run.sh']
+                ['b_can_copy', 'module.yaml', 'run.sh']
             ),
 
         ]
 
         self.assertEqual(
             flist_should, flist)
+
+        self.assertEqual(stdout, """\
+build started prod/1 ... [{prj_path}/_builds/prod/1]
+building: m1 (module)
+b_can_copy copied from ({prj_path}/m1/b_can_copy)
+run.sh rendered [run.sh.tpl]
+
+build finished\n""".format(prj_path=self.prj_path))
+
+    def test_inspect(self):
+        '''
+        testing the folder structure, also for module _ignores
+        '''
+        ret, stdout = run_project(
+            self.prj_name,
+            CMD, 'inspect', '--conf', 'prod.yaml')
+        d = json.loads(stdout)
+        self.assertEqual(
+            d, {
+                "project": {
+                "decription": "awesome_decription",
+                "_executable": [
+                "*.sh",
+                "*.py"
+            ],
+            "name": "awesome_project",
+            "_varient": "prod uat"
+          },
+          "m1": {
+            "_ignores": [
+              "*.not_copy",
+              "should_not_be_copy"
+            ],
+            "name": "awesome_project-prod-1"
+          },
+          "conf": {
+            "updated": "2015-01-01 00:00:00",
+            "name": "prod",
+            "number": 1
+          }
+        })
+
+    def test_create(self):
+        pass
 
 
 if __name__ == '__main__':

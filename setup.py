@@ -5,12 +5,13 @@ import os
 
 
 def read(fname):
-    #return open(os.path.join(os.path.dirname(__file__), fname)).read()
-    return open(fname).read()
+    with open(fname) as f:
+        return f.read()
 
 
 def load_version():
-    return '0.1'
+    with open('src/agile_conf/VERSION.txt') as f:
+        return f.read().strip()
 
 
 setup(
@@ -25,11 +26,15 @@ setup(
     platforms='any',
     install_requires=[
         'PyYAML>=3.0',
-        'Jinja2'
+        'Jinja2',
+        'docopt>=0.6.2'
     ],
-    scripts=['scripts/agconf'],
+    scripts=['scripts/agc', 'scripts/shortcuts.sh'],
     package_dir={'': 'src'},
     packages=['agile_conf'],
+    package_data={
+        'agile_conf': ['*']
+    },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',

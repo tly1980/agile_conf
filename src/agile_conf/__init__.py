@@ -13,6 +13,19 @@ import fnmatch
 import yaml
 import jinja2
 
+ENV_ARGS_CFG = 'AGC_CONF'
+
+
+def load_version():
+    path = os.path.join(
+        os.path.dirname(
+            os.path.realpath(__file__)),
+        'VERSION.txt')
+    with open(path) as f:
+        return f.read().strip()
+
+
+VERSION = load_version()
 
 def aws_userdata(arg_lst):
     lines = []
@@ -112,6 +125,11 @@ class Project(object):
 
     def _build(self, is_module, m, dst_folder):
         src_folder = os.path.join(self.proj_folder, m)
+        if is_module:
+            print "building: %s (module)" % m
+        else:
+            print "building: %s" % m
+
 
         if not os.path.exists(dst_folder):
             os.makedirs(dst_folder)
@@ -125,34 +143,32 @@ class Project(object):
         tpl_env = template_env(self.proj_folder, src_folder)
         fullpath, folders, files = next(os.walk(src_folder))
 
-        files = sorted(files)
+        params = dict(self.the_config)
+        params['_BUILD_DST_FOLDER'] = dst_folder
 
+        if is_module:
+            params.update(self.the_config[m])
+
+        files = sorted(files)
         files_tpl = [
             fname for fname in files if fname.endswith('.tpl')]
-
         files_cp = [
             fname for fname in files if fname not in files_tpl]
 
-        _ignores = self.the_config[m].get('_ignores', [])
+        if is_module:
+            _ignores = self.the_config[m].get('_ignores', [])
 
-        for p in _ignores:
-            files_cp = [
-                f for f in files_cp if not fnmatch.fnmatch(f, p)]
+            for p in _ignores:
+                files_cp = [
+                    f for f in files_cp if not fnmatch.fnmatch(f, p)]
 
-        print "building module: %s" % m
 
         for fname in files_cp:
             if fname not in ('module.yaml', ):
                 src_path = os.path.join(src_folder, fname)
                 dst_path = os.path.join(dst_folder, fname)
                 shutil.copyfile(src_path, dst_path)
-
-        params = dict(self.the_config)
-
-        if is_module:
-            params.update(self.the_config[m])
-
-        params['_BUILD_DST_FOLDER'] = dst_folder
+                print "%s copied from (%s)" % (fname, src_path)
 
         for fname in files_tpl:
             path = os.path.join(src_folder, fname)
@@ -164,17 +180,22 @@ class Project(object):
                 # render it to dst folder
                 with open(dst_path, 'wb') as f2:
                     f2.write(cnt)
+                    print "%s rendered [%s]" % (
+                        dst_path[len(dst_folder)+1:], fname)
+
+        # empty line make it easier to see
+        print "" 
 
 
-def get_conf(args):
-    conf_path = os.environ.get(
-        'AC_CONF', 'conf.yaml') if not args.conf else args.conf
+def get_conf(args_confpath):
+    conf_path = os.environ.get(ENV_ARGS_CFG) if not args_confpath else args_confpath
 
-    if not conf_path and os.path.isfile(conf_path):
-        sys.exit(
-            "invalid build conf path:[%s]. \
-            Please specify it in enviornment variable AC_CONF \
-            or as option argument --conf." % conf_path)
+    if not conf_path:
+        sys.exit("No config is provided. Please specify it in enviornment variable %s \
+            or as option argument --conf." % (conf_path, ENV_ARGS_CFG))
+
+    if not os.path.isfile(conf_path):
+        sys.exit("The config file %s is invalid." % conf_path)
 
     try:
         with open(conf_path) as f:

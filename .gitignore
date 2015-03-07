@@ -3,3 +3,4 @@
 dist
 agile_conf.egg-info
 test/*/_builds
+*/_builds

@@ -1,0 +1,22 @@
+image_id: ami-d50773ef #FIXME: replace with your ami id
+key_name: my-key #FIXME: replace with your key
+instance_type: {{ project.instance_type[conf.name] }}
+subnet_sg_group: front
+subnet_id: 
+  prod: subnet-prodsubnet #FIXME: replace with your real prod subnet
+  uat: subnet-uatsubnet #FIXME: replace with your real uat subnet
+netenv: {{ conf.netenv }}
+
+subnet_security_groups:
+  prod:
+    - sg-prod1  #FIXME: replace with your real security groups
+    - sg-prod2
+  uat:
+    - sg-uat1
+    - sg-uat2
+
+tags:
+  - Key: Name
+    Value: {{ project.product_fullname }}
+  - Key: Environment
+    Value: {{ conf.netenv }}
