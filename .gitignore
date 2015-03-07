@@ -1,6 +1,6 @@
 .python-version
 *.pyc
 dist
-agile_conf.egg-info
+*.egg-info
 test/*/_builds
 */_builds
