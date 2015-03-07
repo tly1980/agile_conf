@@ -1,5 +1,0 @@
-product_fullname: hello-ec2-{{ conf.name }}-{{ conf.number }}
-instance_type:
-    prod: m3.medium
-    uat: t2.micro
-    perf: m3.large

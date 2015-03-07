@@ -2,14 +2,14 @@
 """agile_conf command line tool.
 
 Usage:
-  agc create <bo_name> <prj_name> [--bo_repo=<path>]
+  agc create (<bo_name> <prj_name> | --list) [--bo_repo=<path>]
   agc build [--conf=<path>]
   agc inspect [--conf=<path>] [--yaml]
   agc next [--conf=<path>]
   agc retire [<id>] [--conf=<path>]
   agc id [--conf=<path>]
   agc where [--conf=<path>]
-  agc info
+  agc info [--conf=<path>]
 
 
 Options:
@@ -21,6 +21,11 @@ Options:
   --bo_repo=<path>  Path for the boilerplate repository.
                     If it is not specified,
                     This can also be specified in enviornment
+  --list            List available projects
+
+Commands:
+  create            Create project from boilerplate
+
 """
 from docopt import docopt
 
@@ -36,9 +41,6 @@ import shutil
 import yaml
 
 import agile_conf
-
-
-ENV_ARGS_BOIL = 'AGC_BOIL'
 
 
 def inspect(args, project):
@@ -101,44 +103,79 @@ def auto_next(conf, conf_path):
         f.write(cnt)
 
 
-def create(boil_name, prj_name):
-    boil_base = os.environ.get(ENV_ARGS_BOIL)
-    if boil_base and boil_base.startswith('~'):
+def boil_base(boil_base_arg):
+    if not boil_base_arg:
+        boil_base = os.environ.get(
+            agile_conf.ENV_ARGS_BOIL)
+    else:
+        boil_base=boil_base_arg
+
+    if not boil_base:
+        msg = """Please specify your boilerplate repo using
+--bo_repo or enviornment variable: ENV_ARGS_BOIL.
+
+If you don't have a local boilerplate repo, you can clone
+https://github.com/tly1980/agile_conf_boilplate.git to start with."""
+        sys.exit(msg)
+
+    if boil_base.startswith('~'):
         boil_base = os.path.expanduser(boil_base)
 
     if not boil_base or not os.path.isdir(boil_base):
         sys.exit(
             "Boilerplate repository folder: %s is not a valid folder." % boil_base)
 
-    boil_path = os.path.join(boil_base, boil_name)
+    return os.path.abspath(boil_base)
 
-    if not boil_path or not os.path.isdir(boil_path):
-        sys.exit("Boilerplate folder: %s is not a valid folder." % boil_path)
+
+def create(args):
+    boil_name = args['<bo_name>']
+    prj_name = args['<prj_name>']
+    is_list = args['--list']
+
+    boil_base_path = boil_base(args['--bo_repo'])
+
+    if is_list:
+        r = os.walk(boil_base_path)
+        loc, dirs, files = r.next()
+        for d in dirs:
+            if not d.startswith('.'):
+                print(d)
+        return
 
     dst_path = os.path.join(os.getcwd(), prj_name)
 
-    if os.path.exists(dst_path):
+    src_path = os.path.join(boil_base_path, boil_name)
 
+    if os.path.exists(dst_path):
         sys.exit(
             "%s already exists. Please remove it or specify another project name other than: %s." % (
                 dst_path, prj_name)
             )
-    print "creating project: %s using boilerplate: %s" % (prj_name, boil_path)
-    shutil.copytree(boil_path, dst_path)
+    print """\
+creating project: %s
+using boilerplate: %s""" % (prj_name, src_path)
+    shutil.copytree(src_path, dst_path)
 
 
 def dp_main():
     args = docopt(__doc__, version=agile_conf.VERSION)
 
     if args.get('create'):
-        create(args['<bo_name>'], args['<prj_name>'])
+        create(args)
         return
 
     conf_path, conf = agile_conf.get_conf(args['--conf'])
     prj = agile_conf.Project(os.getcwd(), conf)
 
+    if args.get('info'):
+        print "conf=%s" % conf_path
+        print "boilerplate_repo=%s" % conf_path
+        return
+
+
     if args.get('inspect'):
-        print "with [conf=%s] " % conf_path
+        print "with [conf=%s]" % conf_path
         inspect(args, prj)
     elif args.get('build'):
         print "with [conf=%s] " % conf_path

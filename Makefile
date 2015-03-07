@@ -10,7 +10,7 @@ register: dist
 	python setup.py sdist register
 
 clean: nopyc
-	rm -rf *.egg-info/
+	rm -rvf `find . -name *.egg-info`
 	rm -rf ./cover
 	rm -rf ./build
 	rm -rf ./dist

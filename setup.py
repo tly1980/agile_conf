@@ -32,9 +32,6 @@ setup(
     scripts=['scripts/agc', 'scripts/shortcuts.sh'],
     package_dir={'': 'src'},
     packages=['agile_conf'],
-    package_data={
-        'agile_conf': ['*']
-    },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',

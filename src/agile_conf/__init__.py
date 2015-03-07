@@ -14,6 +14,7 @@ import yaml
 import jinja2
 
 ENV_ARGS_CFG = 'AGC_CONF'
+ENV_ARGS_BOIL = 'AGC_BOIL'
 
 
 def load_version():
@@ -24,8 +25,8 @@ def load_version():
     with open(path) as f:
         return f.read().strip()
 
-
 VERSION = load_version()
+
 
 def aws_userdata(arg_lst):
     lines = []
@@ -191,8 +192,8 @@ def get_conf(args_confpath):
     conf_path = os.environ.get(ENV_ARGS_CFG) if not args_confpath else args_confpath
 
     if not conf_path:
-        sys.exit("No config is provided. Please specify it in enviornment variable %s \
-            or as option argument --conf." % (conf_path, ENV_ARGS_CFG))
+        sys.exit("""No config is provided. Please specify it in 
+enviornment variable %s, or as option argument --conf.""" % ENV_ARGS_CFG)
 
     if not os.path.isfile(conf_path):
         sys.exit("The config file %s is invalid." % conf_path)
