@@ -9,6 +9,7 @@ Usage:
   agc retire [<id>] [--conf=<path>]
   agc id [--conf=<path>]
   agc where [--conf=<path>]
+  agc info
 
 
 Options:
@@ -137,8 +138,10 @@ def dp_main():
     prj = agile_conf.Project(os.getcwd(), conf)
 
     if args.get('inspect'):
+        print "with [conf=%s] " % conf_path
         inspect(args, prj)
     elif args.get('build'):
+        print "with [conf=%s] " % conf_path
         print "build started %s ... [%s]" % (
             prj.build_id(), prj.dst_base_folder())
 
@@ -149,7 +152,7 @@ def dp_main():
     elif args.get('where'):
         print prj.dst_base_folder()
     elif args.get('next'):
-        auto_next(conf)
+        auto_next(conf, conf_path)
     elif args.get('retire'):
         retire(prj, conf_path, args.get('<id>'))
 

@@ -180,7 +180,7 @@ class Project(object):
                 # render it to dst folder
                 with open(dst_path, 'wb') as f2:
                     f2.write(cnt)
-                    print "%s rendered [%s]" % (
+                    print "%s <== [%s]" % (
                         dst_path[len(dst_folder)+1:], fname)
 
         # empty line make it easier to see

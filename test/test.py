@@ -64,11 +64,13 @@ class Prj1Test(unittest.TestCase):
 
         ret, stdout = run_project(
             self.prj_name,
-            CMD, 'new', '--conf', 'prod.yaml')
+            CMD, 'next', '--conf', 'prod.yaml')
+
         self.assertEqual(ret, 0)
+
         self.assertEqual(
             stdout,
-            "Build number +1 to 2 updating file: prod.yaml\n")
+            "Conf number increased to [2]\nupdating file: prod.yaml\n")
 
         ret, conf_id = run_project(
             self.prj_name,
@@ -82,10 +84,11 @@ class Prj1Test(unittest.TestCase):
         self.assertEqual(ret, 0)
         self.assertEqual(
             stdout, """\
+with [conf=prod.yaml] 
 build started prod/1 ... [{prj_path}/_builds/prod/1]
 building: m1 (module)
 b_can_copy copied from ({prj_path}/m1/b_can_copy)
-run.sh rendered [run.sh.tpl]
+run.sh <== [run.sh.tpl]
 
 build finished\n""".format(prj_path=self.prj_path))
 
@@ -133,10 +136,11 @@ build finished\n""".format(prj_path=self.prj_path))
             flist_should, flist)
 
         self.assertEqual(stdout, """\
+with [conf=prod.yaml] 
 build started prod/1 ... [{prj_path}/_builds/prod/1]
 building: m1 (module)
 b_can_copy copied from ({prj_path}/m1/b_can_copy)
-run.sh rendered [run.sh.tpl]
+run.sh <== [run.sh.tpl]
 
 build finished\n""".format(prj_path=self.prj_path))
 
@@ -147,7 +151,8 @@ build finished\n""".format(prj_path=self.prj_path))
         ret, stdout = run_project(
             self.prj_name,
             CMD, 'inspect', '--conf', 'prod.yaml')
-        d = json.loads(stdout)
+        cnt = '\n'.join(stdout.split('\n')[1:])
+        d = json.loads(cnt)
         self.assertEqual(
             d, {
                 "project": {
