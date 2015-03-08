@@ -74,7 +74,7 @@ Notes: You can specify the boilplate_repo by using --bo_repo or by set it in env
 
 #### 2. Walk thorugh the project.
 
-A new project (build from single_ec2 boilplate) comes with following structure.
+```my_ec2``` project (build from single_ec2 boilplate) comes with following structure.
 
 Please read through the comments.
 

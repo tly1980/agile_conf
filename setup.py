@@ -17,7 +17,9 @@ def load_version():
 setup(
     name='agile_conf',
     version=load_version(),
-    description='An async http client with keep-alive capabilities',
+    description='''A config files (in [YAML](http://yaml.org) format) and \
+template engine ([Jinja2](http://jinja.pocoo.org)) \
+based configuration compile / management tool to make DevOp tasks''',
     long_description=read('README.txt'),
     license='BSD',
     author='Tom Tang',
