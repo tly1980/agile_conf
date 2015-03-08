@@ -1,4 +1,4 @@
-## Agile Conf
+## Agile Conf Document (WIP)
 
 [agile_conf](https://github.com/tly1980/agile_conf) - A config files (in [YAML](http://yaml.org) format) and template engine ([Jinja2](http://jinja.pocoo.org)) based configuration compile / management tool to make DevOp tasks (or maybe 1,000 other things) easier.
 
@@ -109,7 +109,9 @@ Module specific variables are defined in ```module.yaml```.
 
 Variables defined in ```conf.yaml```, can be referenced in ```projects.yaml``` and ```module.yaml``` and templates.
 
-For example.
+In the single_ec2 projects, it has mupltiple conf.yaml for different enviornments.
+```conf_uat.yaml```, ```conf_prod.yaml``` and ```conf_prod.yaml```. When you run the command, you should run it with ```--conf``` options.
+
 
 With a ```conf_uat.yaml```
 ```yaml
