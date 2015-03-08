@@ -29,9 +29,10 @@ setup(
         'Jinja2',
         'docopt>=0.6.2'
     ],
-    scripts=['scripts/agc', 'scripts/shortcuts.sh'],
+    scripts=['scripts/agc'],
     package_dir={'': 'src'},
     packages=['agile_conf'],
+    package_data={'agile_conf': ['*.txt']},
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',

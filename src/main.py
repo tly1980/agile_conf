@@ -4,12 +4,13 @@
 Usage:
   agc create (<bo_name> <prj_name> | --list) [--bo_repo=<path>]
   agc build [--conf=<path>]
-  agc inspect [--conf=<path>] [--yaml]
+  agc inspect [--conf=<path>] [--json]
   agc next [--conf=<path>]
   agc retire [<id>] [--conf=<path>]
   agc id [--conf=<path>]
   agc where [--conf=<path>]
   agc info [--conf=<path>]
+  agc shortcut
 
 
 Options:
@@ -37,6 +38,7 @@ import subprocess
 import sys
 import json
 import shutil
+import functools
 
 import yaml
 
@@ -44,10 +46,21 @@ import agile_conf
 
 
 def inspect(args, project):
-    if not args.get('--yaml'):
-        print "%s" % json.dumps(project.the_config, indent=2)
+    if args.get('--json'):
+        text = functools.partial(json.dumps, indent=2)
     else:
-        print yaml.dump(project.the_config, default_flow_style=False)
+        text = functools.partial(yaml.dump, default_flow_style=False)
+
+    def show(name, text):
+        print "[%s]\n%s\n" % (name, text)
+
+    show('conf', text(project.the_config['conf']))
+    show('project', text(project.the_config['project']))
+
+    for k, v in project.the_config.items():
+        if k not in ('conf', 'project'):
+            show(k, text(v))
+
     sys.exit(0)
 
 
@@ -158,8 +171,34 @@ using boilerplate: %s""" % (prj_name, src_path)
     shutil.copytree(src_path, dst_path)
 
 
+def shortcut():
+    print '''
+##########################################################
+##                                                      ##
+##  Please add following command to your ~/.bash_rc     ##
+##  It allow you quickly switch between different conf  ##
+##  e.g.:                                               ##
+##        $> using uat agc build                        ##
+##     is equivalent to:                                ##
+##        $> agc build  --conf conf_uat.yaml            ##
+##                                                      ##
+##########################################################
+
+using() {
+    envcmd="env AGC_CONF=conf_$1.yaml"
+    shift
+    actual_cmd="$@"
+    $envcmd $actual_cmd
+}
+'''
+
+
 def dp_main():
     args = docopt(__doc__, version=agile_conf.VERSION)
+
+    if args.get('shortcut'):
+        shortcut()
+        return
 
     if args.get('create'):
         create(args)
