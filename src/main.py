@@ -18,14 +18,15 @@ Options:
   --version         Show version.
   --conf=<path>     Config for the build.
                     If it is not specified,
-                    will use enviornment variable AGC_CONF
+                    will use enviornment variable "AGC_CONF".
   --bo_repo=<path>  Path for the boilerplate repository.
                     If it is not specified,
-                    This can also be specified in enviornment
-  --list            List available projects
+                    This can also be specified in
+                    enviornment variable "AGC_BOIL".
+  --list            List available projects.
 
 Commands:
-  create            Create project from boilerplate
+  create            Create project from boilerplate.
 
 """
 from docopt import docopt

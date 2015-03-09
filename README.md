@@ -70,7 +70,7 @@ creating project: my_ec2
 using boilerplate: /Users/minddriven/workspace/agile_conf_boilplate/single_ec2
 ```
 
-Notes: You can specify the boilplate_repo by using --bo_repo or by set it in enviornment variable: AGC_BOIL.
+Notes: You can specify the boilplate_repo with ```--bo_repo```, or set it in enviornment variable: ```AGC_BOIL```.
 
 #### 2. Walk thorugh the project.
 
@@ -131,17 +131,54 @@ would be rendered into
 product_fullname: hello-ec2-uat-1
 ```
 
+Variables defined in ```conf.yaml``` and ```project.yaml``` can be use in ```${MODULE}/module.yaml``` and templates.
 
-Variables defined in ```conf.yaml``` and ```project.yaml``` can be use in ```modules.yaml``` and templates.
+If you want to see the exact value used in the templates:
+USE ```inspect``` command.
 
-Following is ```cfn/0_userdata.sh.tpl```
-
-```bash
-echo "hello world"
-echo "This is [{{conf.name}}-{{conf.number}}] for project: {{project.product_fullname}}"
+```
+$ agc inspect --conf conf_uat.yaml
 ```
 
-would be rendered into ```0_userdata.sh```
+Output would be:
+```
+with [conf=conf_uat.yaml]
+[conf]
+name: uat
+netenv: uat
+number: 1
+
+
+[project]
+instance_type:
+  perf: m3.large
+  prod: m3.medium
+  uat: t2.micro
+product_fullname: hello-ec2-uat-1
+
+
+[cfn]
+image_id: ami-d50773ef
+instance_type: t2.micro
+key_name: my-key
+netenv: uat
+subnet_id:
+  prod: subnet-prodsubnet
+  uat: subnet-uatsubnet
+subnet_security_groups:
+  prod:
+  - sg-prod1
+  - sg-prod2
+  uat:
+  - sg-uat1
+  - sg-uat2
+subnet_sg_group: front
+tags:
+- Key: Name
+  Value: hello-ec2-uat-1
+- Key: Environment
+  Value: uat
+```
 
 ### 3. Create a config build.
 
@@ -165,15 +202,201 @@ number: 1
 You would have a folder ```_builds/uat/1``` with following layout:
 
 ```
-cfn/
+cfn/             # all are from cfn/*.tpl
 	0_userdata.sh
 	ec2.json
 	module.yaml
-create_stack.sh
-kill_stack.sh
+create_stack.sh  # compiled from _script/create_stack.sh.tpl
+kill_stack.sh    # compiled from _script/kill_stack.sh.tpl
 ```
 
-#### 4. Other commands
+### 4. filters
+
+[agile_conf](https://github.com/tly1980/agile_conf) built-in jinja2 filters.
+
+
+Here is the example of ```aws_userdata``` filter from the ```single_ec2``` boilplate project.
+
+```bash
+echo "hello world"
+echo "This is [{{conf.name}}-{{conf.number}}] for project: {{project.product_fullname}}"
+```
+
+It would be rendered into:
+```bash
+echo "hello world"
+echo "This is [uat-1] for project: hello-ec2-uat-1"
+```
+
+In ```ec2.json.tpl``` we have a following code. 
+
+```
+"UserData": {{ [_BUILD_DST_FOLDER, "0_userdata.sh"] |aws_userdata }},
+```
+
+It is using a ```aws_userdata``` filter to turn ```0_userdata.sh``` into following code.
+
+```_BUILD_DST_FOLDER``` is the output destination folder of the module, exactly where the ```0_userdata.sh``` located.
+
+And you can see the shell script is rendred into cloudformation json structure:
+
+```
+"UserData": {
+    "Fn::Base64": {
+        "Fn::Join": [
+            "",
+            [
+                "echo \"hello world\"\n",
+                "echo \"This is [uat-1] for project: hello-ec2-uat-1\"\n"
+            ]
+        ]
+    }
+},
+```
+
+Another filter is ```jsonify```.
+
+In ```cfn/module.yaml```, tags are defined in following value:
+
+```yaml
+tags:
+  - Key: Name
+    Value: {{ project.product_fullname }}
+  - Key: Environment
+    Value: {{ conf.netenv }}
+```
+
+In ```cfn/ec2.json.tpl```, it is how ```tags``` being used:
+
+```
+"Tags": {{ tags|jsonify }}
+```
+
+It would be rendered into following:
+
+```
+"Tags": [
+		{"Key": "Name", "Value": "hello-ec2-uat-1"},
+		{"Key": "Environment", "Value": "uat"}
+	]
+```
+
+### Commands
+
+**Command: build**
+
+Compile the variables into 
+
+
+```
+agc build --conf conf_xxx.yaml
+```
+
+**Command: inspect**
+
+Print out all the variables, would be very useful for debugging
+
+```
+agc inspect --conf conf_xxx.yaml
+```
+
+**Command: inspect**
+
+
+```
+agc inspect --conf conf_xxx.yaml
+```
+
+**Shortcut: using**
+
+If you put following shell script in your BASH rc file,  
+
+```bash
+using() {
+    envcmd="env AGC_CONF=conf_$1.yaml"
+    shift
+    actual_cmd="$@"
+    $envcmd $actual_cmd
+}
+```
+
+you will have a very convinient short cut to switch different conf_xxx.yaml.
+
+
+```
+using uat agc inspect
+```
+
+```
+using uat agc build
+```
+
+It is particular useful to do it with Makefile.
+
+Supposed you have following a Makefile.
+
+```Makefile
+build_uat:
+	agc build --conf conf_uat.yaml
+
+build_prod:
+	agc build --conf conf_prod.yaml
+
+build_perf:
+	agc build --conf conf_prod.yaml
+
+```
+
+With shortcut ```using```, you could have a Makefile like following:
+
+```Makefile
+build_uat:
+	agc build
+```
+
+So you can switch between different conf_xxx.yaml by:
+
+
+1. ```using uat make build```
+2. ```using prod make build```
+3. ```using perf make build```
+
+**PS**: ```using``` can work with all the command with ```--conf``` options.
+
+**Command: create**
+
+To create a project from boilerplate repository.
+
+```
+agc create ${bo_name} ${project}
+```
+
+Before you run this command, you should set enviornment variable ```AGC_BOIL```,  
+or use it with ```--bo_repo``` with it.
+
+> --bo_repo or AGC_BOIL can only be set to point to a local path. 
+> You cannot put it GIT/HTTP URL to it, yet ... :)
+
+
+**Command: id**
+
+```agc id --conf conf_uat.yaml``` or ```using uat agc id```
+
+Will output:
+
+```{conf_name}/{conf_number}```
+
+**Command: where**
+```agc id --conf conf_uat.yaml``` or ```using uat agc where```
+
+Will output the exact location where the build is gonna to be.
+
+e.g.:
+```
+$ using uat agc where
+/Users/minddriven/workspace/play_agile_conf/my_ec2/_builds/uat/1
+```
+
 
 
 
